@@ -1,0 +1,49 @@
+{
+    // =========================================================================
+    //  Whack it - autocompletado e IntelliSense
+    // =========================================================================
+    //
+    //  Esto NO compila nada. Solo le dice al editor donde buscar los
+    //  encabezados, para que reconozca raylib.h, ofrezca autocompletado y deje
+    //  de subrayar en rojo cosas que si existen.
+    //
+    //  Si algun include sigue marcado en rojo despues de guardar:
+    //  Ctrl+Shift+P y "C/C++: Reset IntelliSense Database".
+    // =========================================================================
+
+    "version": 4,
+
+    "configurations": [
+        {
+            "name": "Win32",
+
+            "includePath": [
+                // Todo el proyecto, para los .hpp propios.
+                "${workspaceFolder}/**",
+
+                // raylib vive dentro del repositorio, con ruta relativa. Es la
+                // misma que usan el .cbp y el Makefile: si algun dia se mueve,
+                // se cambia en los tres y en ningun lado mas.
+                "${workspaceFolder}/libs/raylib/include"
+            ],
+
+            // La misma que el .cbp y el Makefile le pasan al compilador. Sin
+            // ella el editor lee raylib.h por la rama equivocada y marca en rojo
+            // funciones que si existen.
+            "defines": [
+                "PLATFORM_DESKTOP"
+            ],
+
+            // Con esta ruta la extension le pregunta al propio compilador que
+            // encabezados del sistema conoce, en vez de adivinarlos. Es lo que
+            // hace que <cstring> o <fstream> tampoco salgan subrayados.
+            "compilerPath": "C:/Program Files/CodeBlocks/MinGW/bin/g++.exe",
+
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+
+            // gcc, no msvc: el compilador es MinGW.
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ]
+}

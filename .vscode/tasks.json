@@ -1,0 +1,113 @@
+{
+    // =========================================================================
+    //  Whack it - tareas de compilacion (Windows)
+    // =========================================================================
+    //
+    //  Los botones de abajo a la izquierda los pone la extension "Tasks"
+    //  (actboy168.tasks): VS Code por si solo no tiene botones de tareas. Lee
+    //  este archivo y saca un boton por cada tarea con "options.statusbar".
+    //
+    //  Las etiquetas, los iconos y los colores son los mismos que en la Mac, a
+    //  proposito: cuando alguien diga "dale a Compilar y ejecutar", que sea el
+    //  mismo boton del mismo color en las dos maquinas. Lo unico que cambia es
+    //  el comando, porque en Windows GNU Make se llama mingw32-make.
+    //
+    //  Ctrl + Shift + B  ->  Compilar        F5  ->  compila y depura
+    // =========================================================================
+
+    "version": "2.0.0",
+
+    // Todas las tareas heredan este PATH. La carpeta bin de MinGW no esta en el
+    // PATH de Windows -Code::Blocks la usa por dentro y no la publica-, asi que
+    // sin esto la consola responde que mingw32-make no existe. Se agrega AL
+    // PRINCIPIO para que gane sobre cualquier otro compilador instalado.
+    "options": {
+        "env": {
+            "PATH": "C:\\Program Files\\CodeBlocks\\MinGW\\bin;${env:PATH}"
+        }
+    },
+
+    "tasks": [
+        {
+            "label": "Compilar",
+            "detail": "mingw32-make  ·  recompila si algun .cpp cambio",
+            "type": "shell",
+            "command": "mingw32-make",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "statusbar": {
+                    "label": "$(tools) Compilar",
+                    "color": "#89b4fa"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+
+            // El que traduce los errores de g++ a la lista de Problemas: cada
+            // error queda como un renglon en el que se puede hacer clic para
+            // saltar a la linea exacta.
+            "problemMatcher": ["$gcc"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Compilar y ejecutar",
+            "detail": "mingw32-make ejecutar  ·  compila y abre el juego",
+            "type": "shell",
+            "command": "mingw32-make ejecutar",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "statusbar": {
+                    "label": "$(play) Compilar y ejecutar",
+                    "color": "#a6e3a1"
+                }
+            },
+            "problemMatcher": ["$gcc"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Ejecutar",
+            "detail": "abre el juego ya compilado, sin volver a compilar",
+            "type": "shell",
+
+            // En la Mac esta linea dice ./WhackIt. La diferencia es solo el
+            // nombre del archivo; el cwd es lo importante, porque el juego busca
+            // sus imagenes en recursos/ relativo a donde se le llama.
+            "command": ".\\WhackIt.exe",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "statusbar": {
+                    "label": "$(run-all) Ejecutar"
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Limpiar",
+            "detail": "mingw32-make limpiar  ·  borra el ejecutable",
+            "type": "shell",
+            "command": "mingw32-make limpiar",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "statusbar": {
+                    "label": "$(trash) Limpiar"
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

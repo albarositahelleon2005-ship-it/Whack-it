@@ -1,0 +1,59 @@
+{
+    // =========================================================================
+    //  Whack it - ejecutar con depurador (F5)
+    // =========================================================================
+    //
+    //  F5 compila y arranca el juego con gdb enganchado. Sirve para poner
+    //  puntos de interrupcion: se hace clic a la izquierda del numero de linea,
+    //  aparece un punto rojo, y el juego se congela justo ahi cuando pasa por
+    //  esa linea. Ahi se pueden ver los valores de las variables sin llenar el
+    //  codigo de printf.
+    //
+    //  Ctrl + F5 lo corre sin depurador, que es un poco mas rapido.
+    //
+    //  Requiere la extension C/C++ de Microsoft (ms-vscode.cpptools).
+    // =========================================================================
+
+    "version": "0.2.0",
+
+    "configurations": [
+        {
+            "name": "Depurar Whack it",
+            "type": "cppdbg",
+            "request": "launch",
+
+            "program": "${workspaceFolder}/WhackIt.exe",
+            "args": [],
+            "stopAtEntry": false,
+
+            // La carpeta desde donde arranca el juego. Tiene que ser la del
+            // proyecto: recursos/ se busca relativo a aqui.
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+
+            // false: la salida de raylib sale en la consola de VS Code en vez de
+            // abrir una ventana negra aparte.
+            "externalConsole": false,
+
+            "MIMode": "gdb",
+
+            // Ruta completa al depurador. Va escrita entera porque la carpeta
+            // bin de MinGW no esta en el PATH de Windows.
+            "miDebuggerPath": "C:/Program Files/CodeBlocks/MinGW/bin/gdb.exe",
+
+            "setupCommands": [
+                {
+                    // Sin esto, al ver un std::string en el panel de variables
+                    // aparece su estructura interna en vez del texto.
+                    "description": "Mostrar los contenedores de forma legible",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+
+            // Compila antes de arrancar. El nombre tiene que coincidir letra
+            // por letra con el label de tasks.json.
+            "preLaunchTask": "Compilar"
+        }
+    ]
+}

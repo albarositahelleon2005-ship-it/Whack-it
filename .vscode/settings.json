@@ -1,0 +1,27 @@
+{
+    // =========================================================================
+    //  Whack it - ajustes de VS Code para esta carpeta
+    // =========================================================================
+    //  Solo aplican al abrir este proyecto. No tocan la configuracion general
+    //  de VS Code ni la de otros trabajos.
+    // =========================================================================
+
+    // Apaga el boton de "Run C/C++ File" que la extension de C/C++ pone arriba
+    // a la derecha del editor. Ese boton es el que genero solo la tarea
+    // "C/C++: g++.exe compilar archivo activo", que compila UNICAMENTE el
+    // archivo abierto: en un proyecto de 23 fuentes eso no puede enlazar, y
+    // ademas se robaba el Ctrl+Shift+B. Apagado, no vuelve a aparecer.
+    //
+    // Para compilar y depurar estan los botones de la barra de abajo y F5.
+    "C_Cpp.debugShortcut": false,
+
+    // La carpeta bin de MinGW, agregada al PATH de la terminal de VS Code. Es
+    // lo que hace que escribir mingw32-make, g++ o gdb funcione en la terminal
+    // de aqui abajo sin poner la ruta completa.
+    //
+    // Solo vale DENTRO de VS Code: en una consola de Windows aparte sigue sin
+    // reconocerse, porque el PATH del sistema no se toca desde aqui.
+    "terminal.integrated.env.windows": {
+        "PATH": "C:\\Program Files\\CodeBlocks\\MinGW\\bin;${env:PATH}"
+    }
+}

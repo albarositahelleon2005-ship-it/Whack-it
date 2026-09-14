@@ -2,6 +2,8 @@
 # un Build; no tiene caso llevarlos en el repo (y bin/ con -static pesa mucho).
 bin/
 obj/
+*.exe
+*.o
 WhackIt.depend
 WhackIt.layout
 
