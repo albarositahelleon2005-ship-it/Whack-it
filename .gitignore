@@ -1,0 +1,9 @@
+# Artefactos de compilacion de Code::Blocks / MinGW. Se regeneran solos con
+# un Build; no tiene caso llevarlos en el repo (y bin/ con -static pesa mucho).
+bin/
+obj/
+WhackIt.depend
+WhackIt.layout
+
+# Lo que arma empaquetar.bat para repartir el juego.
+Distribuir/
