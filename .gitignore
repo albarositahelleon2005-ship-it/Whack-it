@@ -4,6 +4,7 @@ bin/
 obj/
 *.exe
 *.o
+WhackIt
 WhackIt.depend
 WhackIt.layout
 
