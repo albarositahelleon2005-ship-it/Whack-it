@@ -1,0 +1,37 @@
+================================================
+  WHACK IT
+================================================
+
+COMO JUGAR
+  Haz doble clic en WhackIt.exe
+
+  IMPORTANTE: no saques WhackIt.exe de esta carpeta.
+  El juego necesita la carpeta "recursos" junto a el.
+  Si quieres un acceso rapido, crea un ACCESO DIRECTO:
+  clic derecho sobre WhackIt.exe > Enviar a > Escritorio.
+
+CONTROLES
+  Raton, clic izquierdo para golpear.
+  ESC o el boton de arriba a la izquierda para pausar.
+  El engrane de arriba a la derecha abre el volumen.
+
+REGLAS
+  Golpea a los topos antes de que se escondan: +1 punto.
+  Cuidado con las bombas: -2 puntos y -1 vida.
+  Si un topo se escapa pierdes la racha, pero no vida.
+  El puntaje nunca baja de cero.
+  La partida termina cuando te quedas sin vidas.
+
+  Facil     5 pozos,  1 vida
+  Normal    7 pozos,  2 vidas
+  Dificil  10 pozos,  3 vidas
+
+SI WINDOWS TE AVISA "Windows protegio tu PC"
+  Es normal en programas nuevos que no estan firmados
+  digitalmente. Haz clic en "Mas informacion" y luego
+  en "Ejecutar de todas formas".
+
+REQUISITOS
+  Windows de 64 bits.
+
+================================================

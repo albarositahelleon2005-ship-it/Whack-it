@@ -1,0 +1,40 @@
+/**
+ * icono.rc - Recursos de Windows para el ejecutable de Whack it.
+ *
+ * Este archivo no es codigo C++: es un "script de recursos" que windres
+ * convierte en datos y el enlazador mete DENTRO del .exe. Gracias a el, el
+ * icono viaja junto con el programa y no hace falta repartir el .ico aparte.
+ *
+ * El recurso se llama GLFW_ICON a proposito. Windows usa el primer icono que
+ * encuentre para el Explorador, y GLFW -la libreria de ventanas que trae
+ * raylib- busca justo ese nombre para ponerlo en la barra de tareas. Con un
+ * solo recurso quedan cubiertos los dos lugares.
+ */
+
+GLFW_ICON ICON "icono.ico"
+
+/* Datos que Windows muestra en Propiedades > Detalles del archivo. */
+
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        /* 080a = espanol (Mexico), 04b0 = Unicode */
+        BLOCK "080a04b0"
+        BEGIN
+            VALUE "CompanyName",      "Universidad de Sonora"
+            VALUE "FileDescription",  "Whack it"
+            VALUE "FileVersion",      "1.0"
+            VALUE "InternalName",     "WhackIt"
+            VALUE "OriginalFilename", "WhackIt.exe"
+            VALUE "ProductName",      "Whack it"
+            VALUE "ProductVersion",   "1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x080a, 1200
+    END
+END

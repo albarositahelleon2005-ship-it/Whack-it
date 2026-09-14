@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="WhackIt" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/WhackIt" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/WhackIt" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<!-- type="0" = aplicacion con ventana. En Debug se deja type="1"
+				     (consola) a proposito, para poder ver los mensajes de raylib
+				     mientras se programa. -->
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<!-- Sin ventana negra de consola detras del juego. -->
+					<Add option="-mwindows" />
+					<!-- Mete las librerias del compilador DENTRO del .exe. Sin
+					     esto, el juego arranca en tu compu (que tiene MinGW) pero
+					     en la de alguien mas truena con "falta libstdc++-6.dll".
+					     Si tu MinGW no acepta -static, cambialo por estas dos:
+					     -static-libgcc  y  -static-libstdc++ -->
+					<Add option="-static" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-DPLATFORM_DESKTOP" />
+			<Add directory="libs/raylib/include" />
+		</Compiler>
+		<Linker>
+			<Add library="raylib" />
+			<Add library="opengl32" />
+			<Add library="gdi32" />
+			<Add library="winmm" />
+			<Add directory="libs/raylib/lib" />
+		</Linker>
+		<Unit filename="Ajustes.cpp" />
+		<Unit filename="Ajustes.hpp" />
+		<Unit filename="Aleatorio.cpp" />
+		<Unit filename="Aleatorio.hpp" />
+		<Unit filename="Animacion.cpp" />
+		<Unit filename="Animacion.hpp" />
+		<Unit filename="Audio.cpp" />
+		<Unit filename="Audio.hpp" />
+		<Unit filename="BarraSuperior.cpp" />
+		<Unit filename="BarraSuperior.hpp" />
+		<Unit filename="Boton.cpp" />
+		<Unit filename="Boton.hpp" />
+		<Unit filename="ConfigPartida.cpp" />
+		<Unit filename="ConfigPartida.hpp" />
+		<Unit filename="Configuracion.cpp" />
+		<Unit filename="Configuracion.hpp" />
+		<Unit filename="Creditos.cpp" />
+		<Unit filename="Creditos.hpp" />
+		<Unit filename="Dibujo.cpp" />
+		<Unit filename="Dibujo.hpp" />
+		<Unit filename="Dificultad.cpp" />
+		<Unit filename="Dificultad.hpp" />
+		<Unit filename="Escena.hpp" />
+		<Unit filename="icono.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="Iconos.cpp" />
+		<Unit filename="Iconos.hpp" />
+		<Unit filename="Instrucciones.cpp" />
+		<Unit filename="Instrucciones.hpp" />
+		<Unit filename="Juego.cpp" />
+		<Unit filename="Juego.hpp" />
+		<Unit filename="Menu.cpp" />
+		<Unit filename="Menu.hpp" />
+		<Unit filename="Monticulo.hpp" />
+		<Unit filename="Opciones.cpp" />
+		<Unit filename="Opciones.hpp" />
+		<Unit filename="Partida.cpp" />
+		<Unit filename="Partida.hpp" />
+		<Unit filename="Pausa.cpp" />
+		<Unit filename="Pausa.hpp" />
+		<Unit filename="Puntaje.cpp" />
+		<Unit filename="Puntaje.hpp" />
+		<Unit filename="Resultados.cpp" />
+		<Unit filename="Resultados.hpp" />
+		<Unit filename="Sprites.cpp" />
+		<Unit filename="Sprites.hpp" />
+		<Unit filename="Tablero.cpp" />
+		<Unit filename="Tablero.hpp" />
+		<Unit filename="Tema.hpp" />
+		<Unit filename="VistaTablero.cpp" />
+		<Unit filename="VistaTablero.hpp" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
