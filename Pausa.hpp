@@ -25,9 +25,19 @@ enum AccionPausa {
 };
 
 /**
+ * \brief Deja resaltado "Continuar". Llamar cada vez que se abre la pausa.
+ *
+ * Sin esto la pausa se abr&iacute;a con el &uacute;ltimo bot&oacute;n que se us&oacute;, y un Enter
+ * r&aacute;pido pod&iacute;a mandar al men&uacute; en vez de seguir jugando.
+ */
+void prepararPausa();
+
+/**
  * \brief Procesa la entrada de la ventana de pausa (una llamada por fotograma).
  *
- * ESC hace lo mismo que el bot&oacute;n Continuar: la tecla que abre es la que cierra.
+ * Las flechas arriba/abajo mueven el resaltado y Enter elige ese bot&oacute;n; el
+ * rat&oacute;n tambi&eacute;n sirve. ESC hace lo mismo que el bot&oacute;n Continuar: la tecla
+ * que abre es la que cierra.
  *
  * \return La acci&oacute;n elegida, o Pausa_ninguna si el jugador sigue viendo el panel.
  */

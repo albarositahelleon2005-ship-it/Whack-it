@@ -19,7 +19,7 @@
 					     paso, cada Build deja bin/Debug sin imagenes ni musica y el
 					     juego arranca con iconos faltantes, bolas en vez de gifs y
 					     sin sonido, aunque el codigo este bien. -->
-					<Add after="xcopy /e /i /y &quot;recursos&quot; &quot;bin\Debug\recursos&quot; &gt;nul" />
+					<Add after="cmd /c xcopy /e /i /y /q &quot;recursos&quot; &quot;bin\Debug\recursos&quot;" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -50,7 +50,7 @@
 					     paso, empaquetar.bat es la unica forma de tener recursos junto
 					     al .exe de Release; con esto tambien queda listo tras un Build
 					     normal, para poder probarlo directo. -->
-					<Add after="xcopy /e /i /y &quot;recursos&quot; &quot;bin\Release\recursos&quot; &gt;nul" />
+					<Add after="cmd /c xcopy /e /i /y /q &quot;recursos&quot; &quot;bin\Release\recursos&quot;" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -115,6 +115,8 @@
 		<Unit filename="Resultados.hpp" />
 		<Unit filename="Sprites.cpp" />
 		<Unit filename="Sprites.hpp" />
+		<Unit filename="TablaPuntajes.cpp" />
+		<Unit filename="TablaPuntajes.hpp" />
 		<Unit filename="Tablero.cpp" />
 		<Unit filename="Tablero.hpp" />
 		<Unit filename="Tema.hpp" />

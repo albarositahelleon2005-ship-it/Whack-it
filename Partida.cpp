@@ -14,31 +14,43 @@
 //***********************************************
 
 /**
- * \brief Vacía un pozo y, si el nivel saca los objetos de uno en uno, arranca
- * la cuenta regresiva del siguiente.
+ * \brief Cada cuánto sale un objeto nuevo.
  *
- * Se pasa por aquí siempre que un pozo se libera -se haya escondido solo o lo
- * hayan golpeado-, para no repetir esa cuenta regresiva en cada caso.
+ * Se amarra al tiempo visible en vez de ser un número fijo: si un objeto dura T
+ * segundos y sale uno cada T / maxSimultaneos, en pantalla se juntan justo
+ * hasta el tope. Así, cuando el juego acelera, también acelera el ritmo de
+ * apariciones sin tener que ajustar un segundo número.
  */
-static void liberarPozo(Partida& partida, int indice)
+static float intervaloAparicion(const Partida& partida)
 {
-    partida.tablero.pozos[indice].contenido = Pozo_vacio;
-    partida.tablero.pozos[indice].restante  = 0.0f;
-    partida.tablero.pozos[indice].vivo      = 0.0f;
+    return partida.visibleActual / (float)partida.reglas.maxSimultaneos;
+}
 
-    // En facil y normal, el reloj de apariciones solo corre cuando la pantalla
-    // esta vacia: ese es justamente el "aparece uno hasta que desaparezca".
-    // En dificil el reloj corre solo, pase lo que pase en los pozos.
-    if(partida.reglas.unoALaVez){
-        partida.esperaAparicion = partida.reglas.intervaloAparicion;
+static void quitarVida(Partida& partida)
+{
+    partida.vidas -= 1;
+
+    if(partida.vidas <= 0){
+        partida.vidas     = 0;
+        partida.terminada = true;
     }
 }
 
 /**
- * \brief Saca un objeto nuevo en algún pozo libre, y acelera un poco el juego.
+ * \brief Deja el objeto del pozo como "aplastado" un momento.
  *
- * Si no hay pozos libres simplemente no saca nada: el reloj vuelve a intentarlo
- * en el siguiente intervalo.
+ * El pozo sigue ocupado mientras se ve la imagen del golpe: así no puede salir
+ * otro objeto encima, y ese objeto cuenta para el tope de simultáneos.
+ */
+static void marcarGolpeado(Pozo& pozo)
+{
+    pozo.golpeado = true;
+    pozo.restante = DURACION_APLASTADO;
+    pozo.vivo     = 0.0f;
+}
+
+/**
+ * \brief Saca un objeto nuevo en algún pozo libre, y acelera un poco el juego.
  */
 static void aparecerObjeto(Partida& partida)
 {
@@ -47,25 +59,51 @@ static void aparecerObjeto(Partida& partida)
 
     Pozo& pozo = partida.tablero.pozos[indice];
 
-    // aleatorio(1,100) <= porcentaje da exactamente esa probabilidad: con 20,
-    // los numeros del 1 al 20 son bomba y del 21 al 100 son topo.
-    bool esBomba = (aleatorio(1, 100) <= partida.reglas.porcentajeBomba);
+    // Primero se decide si toca dorado; solo si no, se tira bomba contra topo.
+    // Al reves, el porcentaje de bomba se comeria parte del 15% del dorado.
+    if(aleatorio(1, 100) <= porcentajePremium(partida.sinPremium)){
+        pozo.contenido     = Pozo_premium;
+        partida.sinPremium = 0;
+    } else {
+        // aleatorio(1,100) <= porcentaje da exactamente esa probabilidad: con
+        // 20, los numeros del 1 al 20 son bomba y del 21 al 100 son topo.
+        bool esBomba = (aleatorio(1, 100) <= partida.reglas.porcentajeBomba);
 
-    pozo.contenido = esBomba ? Pozo_bomba : Pozo_enemigo;
-    pozo.restante  = partida.visibleActual;
-    pozo.vivo      = 0.0f;
+        pozo.contenido = esBomba ? Pozo_bomba : Pozo_enemigo;
+        partida.sinPremium++;
+    }
 
-    // Cada aparicion deja el juego un poquito mas rapido, hasta tocar el piso
-    // que puso la dificultad. De ahi en adelante se queda igual de dificil.
-    partida.visibleActual -= partida.reglas.pasoReduccion;
-    if(partida.visibleActual < partida.reglas.visibleMinimo){
-        partida.visibleActual = partida.reglas.visibleMinimo;
+    pozo.golpeado = false;
+    pozo.restante = partida.visibleActual;
+    pozo.vivo     = 0.0f;
+
+    // El juego no acelera en cada aparicion sino a saltos: cada tantas
+    // apariciones se recorta el tiempo visible, hasta tocar el piso del nivel.
+    partida.apariciones++;
+
+    if(partida.apariciones % partida.reglas.aparicionesPorPaso == 0){
+        partida.visibleActual -= partida.reglas.pasoReduccion;
+
+        if(partida.visibleActual < partida.reglas.visibleMinimo){
+            partida.visibleActual = partida.reglas.visibleMinimo;
+        }
     }
 }
 
 //***********************************************
 // PARTIDA
 //***********************************************
+
+int porcentajePremium(int sinPremium)
+{
+    // sinPremium cuenta los que YA salieron, asi que el que esta por salir es
+    // el numero sinPremium + 1.
+    int siguiente = sinPremium + 1;
+
+    if(siguiente >= PREMIUM_SEGURO_EN)     return 100;
+    if(sinPremium >= PREMIUM_TARDE_DESPUES) return PORCENTAJE_PREMIUM_TARDE;
+    return PORCENTAJE_PREMIUM;
+}
 
 void iniciarPartida(Partida& partida, const ConfigPartida& config)
 {
@@ -84,7 +122,11 @@ void iniciarPartida(Partida& partida, const ConfigPartida& config)
     partida.mejorCombo = 0;
 
     partida.visibleActual   = partida.reglas.visibleInicial;
-    partida.esperaAparicion = partida.reglas.intervaloAparicion;
+    partida.esperaAparicion = intervaloAparicion(partida);
+    partida.apariciones     = 0;
+    partida.sinPremium      = 0;
+    partida.escapados       = 0;
+    partida.avisoEscapes    = 0.0f;
 
     partida.terminada = false;
 }
@@ -92,6 +134,8 @@ void iniciarPartida(Partida& partida, const ConfigPartida& config)
 void avanzarPartida(Partida& partida, float dt)
 {
     if(partida.terminada) return;
+
+    if(partida.avisoEscapes > 0.0f) partida.avisoEscapes -= dt;
 
     // 1. Los que ya llevan su tiempo asomados se esconden.
     for(int i = 0; i < partida.tablero.cantidad; i++){
@@ -102,43 +146,44 @@ void avanzarPartida(Partida& partida, float dt)
         pozo.vivo     += dt;
         pozo.restante -= dt;
 
-        if(pozo.restante <= 0.0f){
+        if(pozo.restante > 0.0f) continue;
 
-            // Que un topo se esconda sin que lo golpearan rompe la racha, pero
-            // NO quita vida. Que una bomba se esconda sola no cuesta nada: es
-            // justo lo que el jugador queria que pasara.
-            if(pozo.contenido == Pozo_enemigo){
-                partida.combo = 0;
+        // Un topo que se esconde sin que lo golpearan rompe la racha, y cada
+        // ESCAPES_POR_VIDA escapes (en toda la partida, no seguidos) cuestan una
+        // vida. Que una bomba se esconda sola no cuesta nada: es justo lo que el
+        // jugador queria que pasara.
+        bool esTopo = (pozo.contenido == Pozo_enemigo || pozo.contenido == Pozo_premium);
+
+        if(esTopo && !pozo.golpeado){
+            partida.combo = 0;
+            partida.escapados++;
+
+            // Un escape nuevo corta el aviso de "3/3" del anterior: el
+            // marcador tiene que mostrar ya la cuenta de verdad.
+            partida.avisoEscapes = 0.0f;
+
+            if(partida.escapados % ESCAPES_POR_VIDA == 0){
+                quitarVida(partida);
+                partida.avisoEscapes = DURACION_AVISO_ESCAPES;
             }
-
-            liberarPozo(partida, i);
         }
+
+        vaciarPozo(pozo);
     }
 
-    // 2. El reloj de apariciones.
-    if(partida.reglas.unoALaVez){
+    if(partida.terminada) return;
 
-        // Facil y normal: solo cuenta mientras no haya nada en pantalla.
-        if(pozosOcupados(partida.tablero) == 0){
-            partida.esperaAparicion -= dt;
+    // 2. El reloj de apariciones. Si ya esta el tope de objetos en pantalla, la
+    //    cuenta se queda en cero y el siguiente sale en cuanto se libere un pozo.
+    partida.esperaAparicion -= dt;
 
-            if(partida.esperaAparicion <= 0.0f){
-                aparecerObjeto(partida);
-                partida.esperaAparicion = partida.reglas.intervaloAparicion;
-            }
-        }
+    if(partida.esperaAparicion <= 0.0f){
 
-    } else {
-
-        // Dificil: cada intervalo sale algo, haya lo que haya en pantalla.
-        // Es un 'while' y no un 'if' por si un fotograma se alarga tanto que
-        // le cabe mas de un intervalo; sumar en vez de reasignar evita que se
-        // pierda el sobrante y el ritmo se vaya recorriendo.
-        partida.esperaAparicion -= dt;
-
-        while(partida.esperaAparicion <= 0.0f){
+        if(pozosOcupados(partida.tablero) < partida.reglas.maxSimultaneos){
             aparecerObjeto(partida);
-            partida.esperaAparicion += partida.reglas.intervaloAparicion;
+            partida.esperaAparicion = intervaloAparicion(partida);
+        } else {
+            partida.esperaAparicion = 0.0f;
         }
     }
 }
@@ -149,23 +194,25 @@ ResultadoGolpe golpearPozo(Partida& partida, int indice)
     if(indice < 0)          return Golpe_aire;
     if(indice >= partida.tablero.cantidad) return Golpe_aire;
 
-    ContenidoPozo contenido = partida.tablero.pozos[indice].contenido;
+    Pozo& pozo = partida.tablero.pozos[indice];
 
-    // Pegarle a un pozo vacio no castiga: la racha solo se pierde por la bomba
-    // o por dejar escapar un topo.
-    if(contenido == Pozo_vacio) return Golpe_aire;
+    // Pegarle a un pozo vacio -o a uno que ya se golpeo y solo esta mostrando
+    // la imagen del golpe- no castiga ni suma.
+    if(pozo.contenido == Pozo_vacio || pozo.golpeado) return Golpe_aire;
 
-    if(contenido == Pozo_enemigo){
+    if(pozo.contenido == Pozo_enemigo || pozo.contenido == Pozo_premium){
 
-        partida.puntaje += 1;
+        bool premium = (pozo.contenido == Pozo_premium);
+
+        partida.puntaje += premium ? PUNTOS_PREMIUM : 1;
         partida.combo   += 1;
 
         if(partida.combo > partida.mejorCombo){
             partida.mejorCombo = partida.combo;
         }
 
-        liberarPozo(partida, indice);
-        return Golpe_enemigo;
+        marcarGolpeado(pozo);
+        return premium ? Golpe_premium : Golpe_enemigo;
     }
 
     // Lo que queda es la bomba.
@@ -173,13 +220,8 @@ ResultadoGolpe golpearPozo(Partida& partida, int indice)
     if(partida.puntaje < 0) partida.puntaje = 0;   // el puntaje no va a negativos
 
     partida.combo = 0;
-    partida.vidas -= 1;
+    quitarVida(partida);
 
-    if(partida.vidas <= 0){
-        partida.vidas     = 0;
-        partida.terminada = true;
-    }
-
-    liberarPozo(partida, indice);
+    marcarGolpeado(pozo);
     return Golpe_bomba;
 }

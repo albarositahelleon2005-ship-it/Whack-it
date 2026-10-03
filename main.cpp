@@ -6,6 +6,7 @@
 
 #include "raylib.h"
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 
 #include "Menu.hpp"
@@ -48,6 +49,13 @@ int main()
     // con eso el juego funciona igual sin importar como lo hayan abierto.
     ChangeDirectory(GetApplicationDirectory());
 
+    // Code::Blocks deja el .exe en bin/Debug o bin/Release, y si el paso que
+    // copia recursos/ ahi no corrio, el juego arrancaba con bolas de colores en
+    // vez de gifs. Subir hasta dos carpetas encuentra la del proyecto.
+    for(int i = 0; i < 2 && !DirectoryExists("recursos"); i++){
+        ChangeDirectory("..");
+    }
+
     InitWindow(PantallaAncho, PantallaAlto, "Whack it");
     SetTargetFPS(FPS);
 
@@ -56,6 +64,10 @@ int main()
     // en pantalla, hay que quitarle ese trabajo. Sin esta linea, ESC cierra
     // el juego desde cualquier lado.
     SetExitKey(KEY_NULL);
+
+    // La fuente va antes del "Cargando...", para que hasta ese primer letrero
+    // salga con la tipografia del juego. Es un archivo chico: carga al instante.
+    CargarFuente();
 
     // Preparar los gifs se tarda un par de segundos (ver Animacion.hpp). Sin
     // avisar nada, la ventana se queda en blanco y Windows hasta puede marcarla
@@ -70,6 +82,7 @@ int main()
     // por eso van despues de InitWindow y no antes.
     CargarIconos();
     CargarSprites();
+    CargarPuntajes();
     IniciarAudio();
 
     Escena_Estado escenaActual = Escena_menu;
@@ -128,6 +141,15 @@ int main()
                 {
                     case Escena_menu:
                         escenaActual = ActualizarMenu();
+
+                        // Cada vez que se entra a la configuracion el nombre
+                        // vuelve a "Player 1": si no, el del jugador anterior
+                        // se quedaba puesto para el siguiente. La dificultad
+                        // si se conserva. Solo se llega desde el menu, por eso
+                        // basta con revisarlo aqui.
+                        if(escenaActual == Escena_configuracion){
+                            strcpy(config.nombre, configPorDefecto().nombre);
+                        }
                     break;
 
                     case Escena_configuracion:
@@ -221,6 +243,7 @@ int main()
     TerminarAudio();
     DescargarSprites();
     DescargarIconos();
+    DescargarFuente();
     CloseWindow();
 
     return 0;

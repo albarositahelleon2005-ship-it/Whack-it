@@ -9,6 +9,7 @@
 #include "Menu.hpp"
 #include "Boton.hpp"
 #include "Dibujo.hpp"
+#include "Iconos.hpp"
 #include "Tema.hpp"
 
 //***********************************************
@@ -37,26 +38,28 @@ static const Escena_Estado DESTINOS[NUM_OPCIONES] = {
     Escena_salir
 };
 
-// Cuanto se recorren las opciones desde el borde izquierdo de la ventana.
-static const int MARGEN_IZQUIERDO = 120;
+// Donde arranca la columna de botones y cuanto se separan entre si. El
+// tamano de cada boton lo fija Iconos.hpp, porque ahi se achican las imagenes.
+static const int MARGEN_IZQUIERDO = 100;
+static const int Y_PRIMERA_OPCION = 300;
+static const int SEPARACION       = 72;
 
 // 'static' a nivel de archivo: esta variable solo existe dentro de Menu.cpp.
 // main.cpp no sabe -ni tiene por que saber- cual opcion esta resaltada.
 static int opcionSeleccionada = 0;
 
 /**
- * \brief El area clicable de una opcion del menu.
+ * \brief El area clicable de una opcion del menu: el boton de madera completo.
  *
- * Es mas grande que el texto en si (ver DibujarMenu) a proposito: asi el
- * jugador no tiene que apuntarle exacto a la letra para que el mouse la
- * cuente como "encima".
+ * Es la misma zona donde DibujarMenu pone la imagen, asi que el clic cae
+ * justo donde el jugador ve el boton.
  * \param indice Opcion, desde cero.
  */
 static Rectangle areaOpcion(int indice)
 {
-    return rectangulo((float)MARGEN_IZQUIERDO - 10.0f,
-                       260.0f + indice * 60.0f - 8.0f,
-                       260.0f, 46.0f);
+    return rectangulo((float)MARGEN_IZQUIERDO,
+                      (float)(Y_PRIMERA_OPCION + indice * SEPARACION),
+                      (float)ANCHO_BOTON_INTRO, (float)ALTO_BOTON_INTRO);
 }
 
 //***********************************************
@@ -86,30 +89,28 @@ Escena_Estado ActualizarMenu()
 
 void DibujarMenu()
 {
-    dibujarTextoCentrado("WHACK IT!", 90, 80, COLOR_TITULO);
+    dibujarFondo(fondoPrincipal());
 
     for(int i = 0; i < NUM_OPCIONES; i++){
 
-        // Lo unico que distingue a la opcion resaltada es como se dibuja. No
-        // hay que guardar ningun estado extra: se decide aqui, en el momento
-        // de dibujar. Eso es el modo inmediato.
-        bool seleccionada = (i == opcionSeleccionada);
+        // Lo unico que distingue a la opcion resaltada es que imagen se usa:
+        // la _P (prendida) para la resaltada y la _A (apagada) para las demas.
+        // No hay que guardar ningun estado extra: se decide aqui, en el
+        // momento de dibujar. Eso es el modo inmediato.
+        bool      seleccionada = (i == opcionSeleccionada);
+        Rectangle area         = areaOpcion(i);
+        Texture2D boton        = botonIntro(i, seleccionada);
 
-        Color color   = seleccionada ? COLOR_SELECCION : COLOR_TEXTO;
-        int   tamano  = seleccionada ? 36 : 30;
-        int   y       = 260 + i * 60;
-
-        // A diferencia del texto centrado, aqui todas las opciones arrancan
-        // en la misma columna (MARGEN_IZQUIERDO). Solo la resaltada lleva el
-        // ">" al frente, y como el ancho cambia entre "Jugar" y "> Jugar" se
-        // dibuja con DrawText directo en vez de dibujarTextoCentrado, que
-        // siempre calcula el centro de la ventana.
-        const char* etiqueta = seleccionada
-                             ? TextFormat("> %s", ETIQUETAS[i])
-                             : ETIQUETAS[i];
-
-        DrawText(etiqueta, MARGEN_IZQUIERDO, y, tamano, color);
+        if(boton.id != 0){
+            DrawTexture(boton, (int)area.x, (int)area.y, WHITE);
+        } else {
+            // Si falta el PNG el menu sigue sirviendo: se cae al texto de antes.
+            const char* etiqueta = seleccionada
+                                 ? TextFormat("> %s", ETIQUETAS[i])
+                                 : ETIQUETAS[i];
+            dibujarTexto(etiqueta, (int)area.x + 10, (int)area.y + 12,
+                     seleccionada ? 36 : 30,
+                     seleccionada ? COLOR_SELECCION : COLOR_TEXTO);
+        }
     }
-
-    dibujarTextoCentrado("Flechas o mouse para moverte     Enter o clic para elegir", 660, 20, COLOR_TENUE);
 }

@@ -5,13 +5,16 @@
  * convierte en datos y el enlazador mete DENTRO del .exe. Gracias a el, el
  * icono viaja junto con el programa y no hace falta repartir el .ico aparte.
  *
- * El recurso se llama GLFW_ICON a proposito. Windows usa el primer icono que
- * encuentre para el Explorador, y GLFW -la libreria de ventanas que trae
- * raylib- busca justo ese nombre para ponerlo en la barra de tareas. Con un
- * solo recurso quedan cubiertos los dos lugares.
+ * El recurso NO se llama GLFW_ICON a proposito. Windows usa el primer icono
+ * que encuentre para el Explorador (el .exe y sus accesos directos), pero
+ * GLFW -la libreria de ventanas que trae raylib- solo busca ese nombre para
+ * ponerlo en la ventana y la barra de tareas mientras el juego corre. Con
+ * otro nombre, el .exe conserva su icono y la ventana sale con el normal de
+ * Windows, que es como lo pidio el equipo. Para volver a ponerlo en la
+ * ventana, basta con renombrarlo a GLFW_ICON.
  */
 
-GLFW_ICON ICON "icono.ico"
+ICONO_EXE ICON "icono.ico"
 
 /* Datos que Windows muestra en Propiedades > Detalles del archivo. */
 

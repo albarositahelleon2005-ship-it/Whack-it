@@ -11,20 +11,27 @@ COMO JUGAR
   clic derecho sobre WhackIt.exe > Enviar a > Escritorio.
 
 CONTROLES
-  Raton, clic izquierdo para golpear.
+  Raton, clic izquierdo para atrapar mapaches.
   ESC o el boton de arriba a la izquierda para pausar.
+  En la pausa y en el volumen tambien sirven las flechas y Enter.
   El engrane de arriba a la derecha abre el volumen.
 
 REGLAS
-  Golpea a los topos antes de que se escondan: +1 punto.
+  Atrapa a los mapaches antes de que se escondan: +1 punto.
+  El mapache dorado tambien vale 1 punto.
   Cuidado con las bombas: -2 puntos y -1 vida.
-  Si un topo se escapa pierdes la racha, pero no vida.
+  Cada 3 mapaches que se te escapen pierdes una vida.
   El puntaje nunca baja de cero.
   La partida termina cuando te quedas sin vidas.
 
-  Facil     5 pozos,  1 vida
-  Normal    7 pozos,  2 vidas
-  Dificil  10 pozos,  3 vidas
+  Facil     5 hoyos,  3 vidas
+  Normal    7 hoyos,  2 vidas
+  Dificil  10 hoyos,  1 vida
+
+PUNTAJES
+  Los 10 mejores de cada nivel se guardan en el archivo
+  puntajes.txt, junto a WhackIt.exe. Para borrarlos,
+  borra ese archivo.
 
 SI WINDOWS TE AVISA "Windows protegio tu PC"
   Es normal en programas nuevos que no estan firmados

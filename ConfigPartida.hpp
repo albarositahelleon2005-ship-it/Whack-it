@@ -27,7 +27,7 @@ struct ConfigPartida {
 
 /**
  * \brief La configuración con la que arranca el juego.
- * \return Configuración lista para usarse: dificultad fácil y nombre vacío.
+ * \return Configuración lista para usarse: dificultad fácil y nombre "Player 1".
  */
 ConfigPartida configPorDefecto();
 

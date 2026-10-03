@@ -32,14 +32,28 @@ static const AccionPausa ACCIONES_PAUSA[NUM_BOTONES_PAUSA] = {
     Pausa_menu
 };
 
-static const float PANEL_ANCHO = 420.0f;
-static const float PANEL_ALTO  = 386.0f;
+// Que imagen le toca a cada boton, en el mismo orden que las etiquetas.
+static const BotonPausa IMAGENES_PAUSA[NUM_BOTONES_PAUSA] = {
+    BotonPausa_continuar,
+    BotonPausa_reiniciar,
+    BotonPausa_menu
+};
+
+// La pausa ya no tiene panel dibujado: solo el icono grande y los botones,
+// flotando sobre el velo. El "panel" es la caja invisible que los acomoda.
+static const float SEPARA_BOTONES = 20.0f;
+static const float HUECO_ICONO    = 34.0f;   // entre el icono y el primer boton
+
+static const float PANEL_ANCHO = (float)ANCHO_BOTON_PAUSA;
+static const float PANEL_ALTO  = LADO_ICONO_PAUSA_GRANDE + HUECO_ICONO
+                               + NUM_BOTONES_PAUSA * ALTO_BOTON_PAUSA
+                               + (NUM_BOTONES_PAUSA - 1) * SEPARA_BOTONES;
 
 // Cual boton del panel esta resaltado (por teclado o por el mouse).
 static int botonResaltado = 0;
 
 /**
- * \brief El rect&aacute;ngulo del panel, centrado en la ventana.
+ * \brief La caja (invisible) que acomoda el icono y los botones, centrada.
  *
  * Actualizar y dibujar lo calculan cada quien por su lado en vez de guardarlo. Es
  * una resta: sale m&aacute;s barato que arriesgarse a que el bot&oacute;n se dibuje en un lugar
@@ -61,20 +75,22 @@ static Rectangle botonPausa(int indice)
 {
     Rectangle panel = panelPausa();
 
-    const float MARGEN   = 40.0f;
-    const float ALTO     = 52.0f;
-    const float SEPARA   = 18.0f;
-    const float PRIMERO  = 144.0f;   // debajo del icono y del titulo
+    const float PRIMERO = LADO_ICONO_PAUSA_GRANDE + HUECO_ICONO;   // debajo del icono
 
-    return rectangulo(panel.x + MARGEN,
-                      panel.y + PRIMERO + indice * (ALTO + SEPARA),
-                      panel.width - MARGEN * 2.0f,
-                      ALTO);
+    return rectangulo(panel.x,
+                      panel.y + PRIMERO + indice * (ALTO_BOTON_PAUSA + SEPARA_BOTONES),
+                      (float)ANCHO_BOTON_PAUSA,
+                      (float)ALTO_BOTON_PAUSA);
 }
 
 //***********************************************
 // VENTANA DE PAUSA
 //***********************************************
+
+void prepararPausa()
+{
+    botonResaltado = 0;
+}
 
 AccionPausa ActualizarPausa()
 {
@@ -82,14 +98,19 @@ AccionPausa ActualizarPausa()
     // -por ejemplo salir al menu- seria facil perder una partida sin querer.
     if(IsKeyPressed(KEY_ESCAPE)) return Pausa_continuar;
 
+    // Igual que en el menu: las flechas y el mouse mueven el mismo resaltado,
+    // y Enter elige el resaltado. Aqui no se usa confirmado() porque no se
+    // quiere Espacio: es facil dejarlo apretado sin querer al venir de jugar.
     Rectangle areas[NUM_BOTONES_PAUSA];
     for(int i = 0; i < NUM_BOTONES_PAUSA; i++) areas[i] = botonPausa(i);
 
     moverSeleccion(botonResaltado, NUM_BOTONES_PAUSA, KEY_DOWN, KEY_UP);
     seguirRaton(areas, NUM_BOTONES_PAUSA, botonResaltado);
 
-    if(confirmado(areas[botonResaltado])){
-        return ACCIONES_PAUSA[botonResaltado];
+    if(IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) return ACCIONES_PAUSA[botonResaltado];
+
+    for(int i = 0; i < NUM_BOTONES_PAUSA; i++){
+        if(botonClicado(areas[i])) return ACCIONES_PAUSA[i];
     }
 
     return Pausa_ninguna;
@@ -104,42 +125,23 @@ void DibujarPausa()
 
     Rectangle panel = panelPausa();
 
-    DrawRectangleRounded(panel, 0.08f, 10, COLOR_PANEL);
-    DrawRectangleRoundedLinesEx(panel, 0.08f, 10, 2.0f, COLOR_SELECCION);
-
-    // El mismo icono del boton que abre la pausa, arriba del titulo: asi el
-    // panel se ve claramente como "lo que pasa al picar ese boton".
-    const float LADO_ICONO = 44.0f;
-
+    // El mismo icono del boton que abre la pausa, grande y arriba de los
+    // botones: es lo que dice "esto es la pausa", sin titulo escrito. Es puro
+    // adorno, no se puede picar.
     Texture2D icono = iconoPausa();
 
-    Rectangle origen  = { 0.0f, 0.0f, (float)icono.width, (float)icono.height };
-    Rectangle destino = { panel.x + (panel.width - LADO_ICONO) / 2.0f,
-                          panel.y + 26.0f, LADO_ICONO, LADO_ICONO };
-    Vector2   sinDesfase = { 0.0f, 0.0f };
-
-    DrawTexturePro(icono, origen, destino, sinDesfase, 0.0f, COLOR_TITULO);
-
-    const char* titulo = "PAUSA";
-    int tamano = 36;
-    int ancho  = MeasureText(titulo, tamano);
-
-    DrawText(titulo,
-             (int)(panel.x + (panel.width - ancho) / 2.0f),
-             (int)(panel.y + 82.0f),
-             tamano, COLOR_TITULO);
-
-    for(int i = 0; i < NUM_BOTONES_PAUSA; i++){
-        // Ninguno va marcado como "activo" (fondo lleno): son acciones, no
-        // opciones entre las que se escoge una y se queda encendida. La que
-        // esta resaltada -por teclado o por mouse- solo lleva el aro.
-        dibujarBoton(botonPausa(i), ETIQUETAS_PAUSA[i], false);
-
-        if(i == botonResaltado){
-            DrawRectangleRoundedLinesEx(botonPausa(i), 0.15f, 8, 2.0f, COLOR_SELECCION);
-        }
+    if(icono.id != 0){
+        DrawTexture(icono,
+                    (int)(panel.x + (panel.width - LADO_ICONO_PAUSA_GRANDE) / 2.0f),
+                    (int)panel.y, WHITE);
     }
 
-    dibujarTextoCentrado("Flechas o mouse, Enter o clic     ESC para seguir jugando",
-                         (int)(panel.y + panel.height - 34.0f), 16, COLOR_TENUE);
+    for(int i = 0; i < NUM_BOTONES_PAUSA; i++){
+        // El resaltado -por flechas o mouse- va con su imagen _P (prendida), los demas
+        // con la _A (apagada).
+        bool resaltado = (i == botonResaltado);
+
+        dibujarBotonImagen(botonPausa(i), botonPausaImg(IMAGENES_PAUSA[i], resaltado),
+                           ETIQUETAS_PAUSA[i], resaltado);
+    }
 }

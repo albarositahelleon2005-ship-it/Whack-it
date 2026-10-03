@@ -10,9 +10,11 @@
 #include "Partida.hpp"
 #include "VistaTablero.hpp"
 #include "Pausa.hpp"
+#include "Puntaje.hpp"
 #include "Resultados.hpp"
 #include "Audio.hpp"
 #include "Dibujo.hpp"
+#include "Iconos.hpp"
 #include "Tema.hpp"
 
 // 'static' a nivel de archivo: nadie fuera de aqui necesita ver la partida en
@@ -36,6 +38,7 @@ void AbrirPausa()
 {
     if(partida.terminada) return;
     enPausa = true;
+    prepararPausa();
 }
 
 Escena_Estado ActualizarJuego()
@@ -73,7 +76,7 @@ Escena_Estado ActualizarJuego()
     }
 
     if(IsKeyPressed(KEY_ESCAPE)){
-        enPausa = true;
+        AbrirPausa();
         return Escena_juego;
     }
 
@@ -82,11 +85,12 @@ Escena_Estado ActualizarJuego()
     //    la diferencia entre sentirse justo e injusto.
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 
-        int indice = pozoEn(partida.reglas, GetMousePosition());
+        int indice = pozoEn(partida, GetMousePosition());
 
         switch(golpearPozo(partida, indice))
         {
-            case Golpe_enemigo: sonarGolpe(); break;
+            case Golpe_enemigo:
+            case Golpe_premium: sonarGolpe(); break;
             case Golpe_bomba:   sonarBomba(); break;
             case Golpe_aire:    break;
         }
@@ -96,8 +100,11 @@ Escena_Estado ActualizarJuego()
 
     // 4. Si ese ultimo golpe acabo con las vidas, se congelan los numeros para
     //    el panel de FIN, que ya se dibuja este mismo fotograma.
+    //    Y se anota en la tabla de puntajes. Esto corre una sola vez por
+    //    partida: desde el siguiente fotograma, el paso 1 regresa antes.
     if(partida.terminada){
         prepararResultados(partida.nombre, partida.puntaje, partida.mejorCombo);
+        anotarPuntaje(configActual.dificultad, partida.nombre, partida.puntaje, partida.mejorCombo);
     }
 
     return Escena_juego;
@@ -105,7 +112,11 @@ Escena_Estado ActualizarJuego()
 
 void DibujarJuego()
 {
-    dibujarTextoCentrado("WHACK IT!", 20, 34, COLOR_TITULO);
+    // El fondo de la partida ya trae el letrero de WHACK IT!; el texto solo
+    // hace falta si la imagen no cargo.
+    dibujarFondo(fondoJuego());
+
+    if(fondoJuego().id == 0) dibujarTextoCentrado("WHACK IT!", 20, 34, COLOR_TITULO);
 
     dibujarTablero(partida);
     dibujarMarcador(partida);

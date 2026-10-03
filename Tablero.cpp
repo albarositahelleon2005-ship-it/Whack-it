@@ -18,10 +18,16 @@ void vaciarTablero(Tablero& tablero, int cantidad)
     // basura del tamano de tablero anterior si el jugador cambia de dificultad
     // y vuelve a jugar.
     for(int i = 0; i < MAX_POZOS; i++){
-        tablero.pozos[i].contenido = Pozo_vacio;
-        tablero.pozos[i].restante  = 0.0f;
-        tablero.pozos[i].vivo      = 0.0f;
+        vaciarPozo(tablero.pozos[i]);
     }
+}
+
+void vaciarPozo(Pozo& pozo)
+{
+    pozo.contenido = Pozo_vacio;
+    pozo.golpeado  = false;
+    pozo.restante  = 0.0f;
+    pozo.vivo      = 0.0f;
 }
 
 int pozosOcupados(const Tablero& tablero)

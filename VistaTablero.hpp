@@ -39,13 +39,16 @@ Rectangle areaObjeto(const ReglasDificultad& reglas, int indice);
  * \brief Qué pozo le corresponde a un punto de la pantalla.
  *
  * Cuenta tanto el muñeco como el hoyo, para que el jugador no tenga que
- * apuntarle exacto a la imagen.
+ * apuntarle exacto a la imagen. Solo considera los pozos que tienen algo que
+ * golpear: con 3 filas la cabeza de un muñeco tapa un poco el hoyo de arriba,
+ * y si ese hoyo vacío ganara el clic, el golpe se perdería y el topo contaría
+ * como escapado aunque el jugador sí le atinó.
  *
- * \param reglas Reglas del nivel.
- * \param punto  Posición del clic.
- * \return El índice del pozo, o -1 si el clic cayó en el puro fondo.
+ * \param partida Partida en curso (sus reglas y qué hay en cada pozo).
+ * \param punto   Posición del clic.
+ * \return El índice del pozo, o -1 si el clic no cayó sobre nada golpeable.
  */
-int pozoEn(const ReglasDificultad& reglas, Vector2 punto);
+int pozoEn(const Partida& partida, Vector2 punto);
 
 /**
  * \brief Dibuja todos los pozos y lo que asoma en ellos.

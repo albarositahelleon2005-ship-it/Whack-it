@@ -56,7 +56,7 @@ Rectangle rectangulo(float x, float y, float ancho, float alto);
 /**
  * \brief Dibuja un bot&oacute;n de imagen (un &iacute;cono sin texto).
  *
- * Se resalta igual que un bot&oacute;n de texto: con un fondo suave cuando el rat&oacute;n
+ * Se resalta agrand&aacute;ndose un poco (CRECE_ICONO, en Iconos.hpp) cuando el rat&oacute;n
  * est&aacute; encima, o cuando \p resaltado es verdadero (por ejemplo, porque el
  * teclado lo se&ntilde;ala). La textura se estira exactamente al tama&ntilde;o de \p rec, as&iacute;
  * que conviene que \p rec sea cuadrado si la imagen lo es.
@@ -66,6 +66,34 @@ Rectangle rectangulo(float x, float y, float ancho, float alto);
  * \param resaltado Verdadero si hay que marcarlo aunque el rat&oacute;n no est&eacute; encima.
  */
 void dibujarBotonIcono(Rectangle rec, Texture2D textura, bool resaltado);
+
+/**
+ * \brief Dibuja un bot&oacute;n de madera ya dibujado (una imagen con su texto).
+ *
+ * La imagen ya trae su versi&oacute;n apagada o prendida, as&iacute; que aqu&iacute; no se
+ * resalta nada: quien llama elige cu&aacute;l textura pasar. Si la imagen no carg&oacute;
+ * (id 0), se dibuja un bot&oacute;n de texto normal con \p repuesto, para que el
+ * juego se pueda seguir usando.
+ *
+ * \param rec      D&oacute;nde va; la imagen se estira a este tama&ntilde;o.
+ * \param textura  Imagen del bot&oacute;n (ver Iconos.hpp).
+ * \param repuesto Texto del bot&oacute;n si falta la imagen.
+ * \param prendido Si va resaltado; solo afecta al bot&oacute;n de repuesto.
+ */
+void dibujarBotonImagen(Rectangle rec, Texture2D textura, const char* repuesto, bool prendido);
+
+/**
+ * \brief Dibuja el bot&oacute;n de madera de un nivel de dificultad.
+ *
+ * Lo usan la configuraci&oacute;n y la tabla de puntajes. Si falta la imagen
+ * apagada se usa la prendida oscurecida, y si faltan las dos, un bot&oacute;n de
+ * texto.
+ *
+ * \param area    D&oacute;nde va; debe medir ANCHO_BOTON_NIVEL x ALTO_BOTON_NIVEL.
+ * \param nivel   0 f&aacute;cil, 1 normal, 2 dif&iacute;cil.
+ * \param elegido Verdadero para el nivel elegido (imagen _P).
+ */
+void dibujarBotonNivel(Rectangle area, int nivel, bool elegido);
 
 /**
  * \brief Mueve un &iacute;ndice de selecci&oacute;n dentro de un grupo de opciones, en forma

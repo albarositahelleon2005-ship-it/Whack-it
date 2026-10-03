@@ -27,10 +27,20 @@
  * resultado a un efecto de sonido.
  */
 enum ResultadoGolpe {
-    Golpe_aire,      ///< Le pegó a un pozo vacío o a ningún pozo: no pasa nada
+    Golpe_aire,      ///< Le pegó a un pozo vacío, ya golpeado o a ningún pozo: no pasa nada
     Golpe_enemigo,   ///< Le pegó al topo: +1 punto y la racha crece
+    Golpe_premium,   ///< Le pegó al topo dorado: +PUNTOS_PREMIUM y la racha crece
     Golpe_bomba      ///< Le pegó a la bomba: -2 puntos, -1 vida y adiós racha
 };
+
+/**
+ * \brief Cuánto se queda el "3/3" en el marcador al perder una vida por escapes.
+ *
+ * Sin esto, el tercer escape pasaba de "2/3" directo a "0/3" en el mismo
+ * fotograma en que se rompía el corazón, y parecía que el contador se
+ * reiniciaba sin castigo y que la vida se perdía hasta el cuarto.
+ */
+const float DURACION_AVISO_ESCAPES = 1.0f;
 
 /**
  * \brief Todo el estado de una partida.
@@ -48,6 +58,10 @@ struct Partida {
 
     float visibleActual;     ///< Cuánto dura visible el próximo objeto; va bajando
     float esperaAparicion;   ///< Cuenta regresiva para la siguiente aparición
+    int   apariciones;       ///< Objetos que han salido en toda la partida
+    int   sinPremium;        ///< Objetos que han salido desde el último topo dorado
+    int   escapados;         ///< Topos (normales o dorados) que se escondieron sin ser golpeados
+    float avisoEscapes;      ///< Segundos que el marcador sigue mostrando "3/3" tras perder una vida por escapes
 
     bool terminada;    ///< Verdadero cuando se acabaron las vidas
 };
@@ -79,5 +93,11 @@ void avanzarPartida(Partida& partida, float dt);
  * \return Qué resultó del golpe.
  */
 ResultadoGolpe golpearPozo(Partida& partida, int indice);
+
+/**
+ * \brief Probabilidad (de 0 a 100) de que el siguiente objeto sea topo dorado.
+ * \param sinPremium Objetos que han salido desde el último dorado.
+ */
+int porcentajePremium(int sinPremium);
 
 #endif // PARTIDA_HPP_INCLUDED

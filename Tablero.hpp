@@ -20,6 +20,7 @@
 enum ContenidoPozo {
     Pozo_vacio,     ///< No hay nada; golpearlo no hace nada
     Pozo_enemigo,   ///< El topo: golpearlo suma
+    Pozo_premium,   ///< El topo dorado: sale poco; suma PUNTOS_PREMIUM
     Pozo_bomba      ///< La bomba: golpearla cuesta caro
 };
 
@@ -28,6 +29,7 @@ enum ContenidoPozo {
  */
 struct Pozo {
     ContenidoPozo contenido;   ///< Qué asoma en este momento
+    bool  golpeado;            ///< Ya lo golpearon: se ve aplastado/explotado y no cuenta más golpes
     float restante;            ///< Segundos que le quedan antes de esconderse
     float vivo;                ///< Segundos que lleva asomado (para animar el gif)
 };
@@ -48,7 +50,13 @@ struct Tablero {
 void vaciarTablero(Tablero& tablero, int cantidad);
 
 /**
- * \brief Cuántos pozos tienen algo asomado.
+ * \brief Deja un pozo vacío.
+ * \param pozo Pozo a vaciar.
+ */
+void vaciarPozo(Pozo& pozo);
+
+/**
+ * \brief Cuántos pozos tienen algo asomado, contando los ya golpeados.
  * \param tablero Tablero a revisar.
  * \return El número de pozos ocupados.
  */

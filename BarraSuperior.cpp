@@ -10,7 +10,7 @@
 #include "Boton.hpp"
 #include "Iconos.hpp"
 
-static const float LADO   = 48.0f;   ///< Los íconos son cuadrados de 48x48.
+static const float LADO   = (float)LADO_ICONO;   ///< Los íconos son cuadrados; el tamaño lo fija Iconos.hpp, que los achica al cargar.
 static const float MARGEN = 20.0f;   ///< Separación con el borde de la ventana.
 
 static Rectangle areaIconoAjustes()

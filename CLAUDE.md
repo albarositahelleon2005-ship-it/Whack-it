@@ -25,7 +25,11 @@ Build → Rebuild
 El ejecutable queda en `bin\Debug\` o `bin\Release\`.
 **El `.exe` necesita la carpeta `recursos/` a un lado**; `main()` hace
 `ChangeDirectory(GetApplicationDirectory())` para que eso funcione aunque se
-abra desde un acceso directo.
+abra desde un acceso directo. Si ahí no hay `recursos/`, sube hasta dos
+carpetas (así el `.exe` de `bin\Debug\` encuentra la del proyecto). El `.cbp`
+además copia `recursos/` junto al `.exe` después de cada build (`cmd /c xcopy`:
+Code::Blocks no corre esos pasos dentro de `cmd`, así que sin `cmd /c` la
+redirección `>nul` rompía la copia).
 
 `empaquetar.bat` arma `Distribuir\WhackIt.zip` a partir del build Release.
 `instalador.iss` es un guion opcional de Inno Setup.
@@ -59,9 +63,9 @@ qué dibujar en cada vuelta del bucle. Reglas que hay que respetar:
    `ResultadoGolpe`; quien reproduce el sonido es `Juego.cpp`. Esto es a
    propósito y **conviene no romperlo**: permite probar toda la lógica del juego
    con un `main()` de consola en Linux/Windows sin ventana (ver *Pruebas*).
-5. **Solo ASCII en los strings que se dibujan.** La fuente de fábrica de raylib
-   no cubre acentos ni eñes: saldrían cuadritos. Los comentarios sí llevan
-   acentos, los `DrawText` no.
+5. **Solo ASCII en los strings que se dibujan.** Ni la fuente ARCO (94 glifos)
+   ni la de fábrica de raylib cubren acentos ni eñes: saldrían cuadritos. Los
+   comentarios sí llevan acentos, los `dibujarTexto` no.
 6. Los comentarios explican **por qué**, no qué. Ese es el estilo del proyecto.
 
 ### Mapa de archivos
@@ -71,15 +75,17 @@ qué dibujar en cada vuelta del bucle. Reglas que hay que respetar:
 | `main.cpp` | Bucle principal, ruteo de escenas, barra superior, overlay de ajustes |
 | `Escena.hpp` | El `enum` de pantallas |
 | `Menu.cpp` | Menú principal |
-| `Configuracion.cpp` | Nombre del jugador (máx 12) + dificultad + vista previa de pozos |
+| `Configuracion.cpp` | Nombre del jugador (máx 12; vuelve a "Player 1" cada vez que se entra desde el menú, lo hace `main.cpp`) + dificultad + vista previa de pozos. Fila resaltada con flechas o mouse, como el menú |
 | `Juego.cpp` | Pantalla de partida: traduce entrada y dibujo, nada más |
 | **`Partida.cpp`** | **Las reglas del juego.** Puntaje, vidas, racha, reloj de apariciones |
 | `Tablero.cpp` | Modelo de los pozos y qué asoma en cada uno |
 | `VistaTablero.cpp` | Geometría de los pozos, dibujo del tablero y del marcador |
 | `Dificultad.cpp` | Tabla de `ReglasDificultad`. **Aquí se ajusta todo el balance** |
 | `Pausa.cpp` / `Resultados.cpp` / `Ajustes.cpp` | Las tres ventanas virtuales |
+| `Puntaje.cpp` | Pantalla de mejores puntajes: botones de nivel + top 10 (nombre, racha más larga, mapaches atrapados = puntaje, en naranja) |
+| `TablaPuntajes.cpp` | El top 10 de cada nivel y el archivo `puntajes.txt` (texto, junto a `recursos/`). Sin raylib. Se anota y guarda al terminar cada partida (`Juego.cpp`) |
 | `Animacion.cpp` | Convierte un GIF animado en hoja de sprites (ver abajo) |
-| `Sprites.cpp` | Carga `enemigo.gif` y `bomba.gif` una sola vez |
+| `Sprites.cpp` | Carga `enemigo.png`, `bomba.gif` y `enemigo_premium.gif` una sola vez |
 | `Iconos.cpp` | Carga los PNG de botones |
 | `Audio.cpp` | Música + 2 efectos, con volúmenes independientes |
 | `Boton.cpp` / `Dibujo.cpp` / `Aleatorio.cpp` | Utilidades compartidas |
@@ -89,31 +95,49 @@ qué dibujar en cada vuelta del bucle. Reglas que hay que respetar:
 
 ## Reglas del juego (tal como están implementadas)
 
-- Se golpea con **clic izquierdo** del ratón.
+- Se golpea con **clic izquierdo** del ratón. Durante la partida el teclado
+  solo sirve para ESC (pausa). La pausa y los ajustes también se manejan con
+  flechas + Enter (en ajustes, izquierda/derecha cambian el volumen); la
+  ventana de FIN es solo con mouse.
 - **Topo golpeado:** +1 punto, la racha crece.
+- **Topo dorado golpeado:** +`PUNTOS_PREMIUM` (= 1, igual que el normal; estuvo
+  en 3 y el equipo pidió regresarlo), la racha crece.
 - **Bomba golpeada:** −2 puntos, −1 vida, la racha se pierde.
-- **Topo que se esconde solo:** se pierde la racha, **no** se pierde vida.
+- Lo golpeado se queda **0.5 s** (`DURACION_APLASTADO`) en su pozo con la imagen
+  de aplastado/explosión. Mientras, el pozo sigue ocupado: no sale nada encima,
+  cuenta para el tope de 2 y volver a golpearlo no hace nada.
+- **Topo (normal o dorado) que se esconde solo:** se pierde la racha, y **cada 3
+  escapes en la partida** (no seguidos, `ESCAPES_POR_VIDA`) se pierde una vida.
+  El marcador muestra "Escapes: x/3"; al tercero se queda 1 s en "3/3" en
+  naranja (`DURACION_AVISO_ESCAPES`) mientras se rompe el corazón. Sin ese
+  aviso pasaba de "2/3" a "0/3" de golpe y parecía que la vida se perdía
+  hasta el cuarto escape.
 - El **puntaje nunca baja de cero**.
 - Golpear un pozo vacío o el fondo **no castiga**.
 - La partida **termina al quedarse sin vidas**. Sale la ventana de FIN con
   puntaje y combo más largo.
 - El contador de combo **desaparece de la pantalla** cuando la racha es 0.
 
+### Topo dorado (`porcentajePremium()` en `Partida.cpp`)
+
+Se cuenta cuántos objetos (topos y bombas) han salido desde el último dorado.
+15 % normalmente; 50 % pasados 20 sin dorado; el objeto número 30 es dorado
+seguro. Al salir un dorado la cuenta vuelve a 0. Los números están en
+`Dificultad.hpp`.
+
 ### Tabla de dificultad (`reglasDe()` en `Dificultad.cpp`)
 
-| Nivel | Pozos | Vidas | Visible | Baja hasta | Apariciones | Bombas |
-|---|---|---|---|---|---|---|
-| Fácil | 5 | 1 | 3.0 s | 1.5 s | uno a la vez | 20 % |
-| Normal | 7 | 2 | 2.5 s | 1.5 s | uno a la vez | 25 % |
-| Difícil | 10 | 3 | 2.0 s | 1.0 s | uno cada 1 s, pueden coincidir | 30 % |
+| Nivel | Pozos | Vidas | Visible | Baja hasta | Bombas |
+|---|---|---|---|---|---|
+| Fácil | 5 | 3 | 3.0 s | 1.5 s | 20 % |
+| Normal | 7 | 2 | 2.0 s | 1.0 s | 25 % |
+| Difícil | 10 | 1 | 1.5 s | 0.5 s | 30 % |
 
-El tiempo visible baja `pasoReduccion` en cada aparición hasta tocar el piso.
-`APARICIONES_PARA_ACELERAR` (= 25) es el único número que controla qué tan
-rápido se acelera la curva.
-
-> Nota: que el modo fácil tenga **menos** vidas que el difícil es intencional,
-> viene del boceto original del equipo (1, 2 y 3 corazones). No "arreglarlo"
-> sin preguntar.
+En los tres: máximo **2 objetos a la vez** (`maxSimultaneos`), y el tiempo
+visible baja **0.2 s cada 10 apariciones** (`pasoReduccion`,
+`aparicionesPorPaso`) hasta tocar el piso. Sale un objeto nuevo cada
+`visibleActual / maxSimultaneos` segundos si hay lugar; si ya hay 2, sale en
+cuanto se libere un pozo.
 
 ---
 
@@ -121,7 +145,7 @@ rápido se acelera la curva.
 
 `Animacion.cpp` resuelve un problema concreto: `LoadImageAnim()` de raylib deja
 todos los cuadros en RAM a tamaño original — `bomba.gif` son 638×550 × 99
-cuadros ≈ **130 MB**. Así que al arrancar se achica cada cuadro a 128 px
+cuadros ≈ **130 MB**. Así que al arrancar se achica cada cuadro a 160 px (`LADO_SPRITE`, un poco más que los 150 px a los que se dibuja)
 (respetando proporción, centrado, con 2 px de margen transparente para que el
 filtrado bilineal no chupe píxeles de la casilla vecina), se acomodan en una
 hoja tipo cuadrícula y se sube una sola textura a la GPU. Después, animar es
@@ -130,41 +154,100 @@ puro recorte por tiempo.
 - La hoja es cuadrícula y no tira horizontal porque 101 cuadros × 128 px darían
   12928 px de ancho y muchas GPU no aceptan texturas así.
 - Los FPS de cada gif están escritos a mano en `Sprites.cpp` (raylib no
-  devuelve los tiempos del gif): enemigo 10 fps, bomba 16.7 fps.
-- Si un `.gif` falta, `animacionLista()` da falso y se dibuja un círculo de
+  devuelve los tiempos del gif): bomba 16.7 fps, dorado 5 fps.
+- El topo normal (`enemigo.png`) y las imágenes de golpe (`enemigo_derrotado`,
+  `enemigo_premium_derrotado`, `bomba_explosion`) son de un solo cuadro y pasan
+  por el mismo `cargarAnimacion()`. Van en **PNG**: la `libraylib.a` incluida no
+  trae lector de JPG (solo PNG, GIF, BMP, QOI, DDS), así que un `.jpg` no carga.
+- Si una imagen falta, `animacionLista()` da falso y se dibuja un círculo de
   color en su lugar. El juego no se cae.
 
-**Pendiente conocido:** `bomba.gif` no tiene transparencia (es RGB), así que se
-ve como un rectángulo con el fondo de la escena original saliendo del pozo.
-`enemigo.gif` sí tiene alfa y se ve perfecto. Solución real: conseguir un gif de
-bomba con fondo transparente.
+**Pendiente conocido:** `bomba.gif`, `enemigo_premium.gif` y las 3 imágenes de
+golpe no tienen transparencia, así que se ven como un rectángulo con su fondo
+saliendo del pozo. `enemigo.png` sí tiene alfa y se ve perfecto. Solución real:
+conseguir esas imágenes con fondo transparente.
+
+---
+
+## Botones y fondos
+
+- `recursos/botones/` trae los botones de madera; `recursos/fondo/` un fondo
+  por pantalla (puntaje ya usa el suyo, aunque su contenido sigue de relleno) (`fondo_juego.png` es un boceto en blanco que no se usa; la
+  partida usa `fondo_partida.png`).
+- Los botones con versión `_A` (apagado) y `_P` (prendido): el seleccionado
+  se dibuja con `_P` y los demás con `_A`.
+- El arte llega exportado enorme (hasta 21667×12506: más de 1 GB de RAM al
+  descomprimir). Las copias de `recursos/` están **achicadas a ~2× su tamaño en
+  pantalla**; los originales quedan en `arte_original/`. Si llega arte nuevo,
+  achicarlo igual antes de meterlo: si no, el arranque tarda segundos.
+  Además `Iconos.cpp` los vuelve a ajustar al cargar, al tamaño exacto en que
+  se dibujan (`ANCHO_*`/`ALTO_*` en `Iconos.hpp`).
+- `dibujarBotonImagen()` (`Boton.cpp`) dibuja un botón de imagen y, si falta,
+  uno de texto en su lugar.
+- La pausa **no tiene panel**: solo el velo, el ícono grande de pausa (adorno,
+  no se pica) y los 3 botones. Ajustes y FIN usan `fondo_ajustes.png` y
+  `fondo_FinalPartida.png`, que ya traen su título dibujado. En FIN va
+  `mapache_baka.png` a la izquierda y los resultados centrados a su derecha.
+- Créditos: el texto está en `Creditos.cpp`, sin acentos ni eñes ("Ninez")
+  por la fuente. El nombre del evento y los encabezados (Desarrolladores,
+  Artistas) van en `COLOR_NARANJA` (#FB6334, el de los letreros).
+- Si falta la `_A` de un nivel, se dibuja la `_P` oscurecida.
+- `fondo_configuracion_tierra.png` es el parche de tierra de la vista previa
+  de pozos. Llegó como lienzo de 1280×720 con fondo blanco opaco: la copia de
+  `recursos/` está recortada y con ese blanco hecho transparente. Se dibuja
+  centrado a `ANCHO_TIERRA_CONFIG`×`ALTO_TIERRA_CONFIG` (`Iconos.hpp`): 200 de alto,
+  el ancho proporcional. El resumen de pozos/vidas va encima, no adentro.
+- El botón Inicio de la configuración es `boton_configuracion_inicio_A/_P`;
+  sin nombre válido se dibuja la `_A` oscurecida.
+- Los íconos de la barra (regresar, pausa, ajustes) **crecen** `CRECE_ICONO`
+  px con el mouse encima, sin fondo. Se cargan a 128 px para que crecer no
+  se vea borroso.
+- `hoyo.png` es solo el montículo de enfrente: cada pozo dibuja su muñeco y
+  **después** su hoyo encima, en orden de índice (fila de arriba primero).
+  Mide `ANCHO_HOYO`×`ALTO_HOYO`, que es también el tamaño del pozo.
+
+### Tipografía y colores
+
+- Todo el texto pasa por `dibujarTexto()` / `medirTexto()` (`Dibujo.cpp`), que
+  usan `recursos/fuente/ARCO_juego.ttf`. **No usar `DrawText`/`MeasureText`
+  directo**: saldrían con la fuente de fábrica y mal centrados.
+- `ARCO_juego.ttf` es `ARCO.ttf` con una tabla de caracteres Unicode agregada
+  (con fontTools). La original solo trae la tabla "symbol" de Windows y raylib
+  la rechaza ("Failed to process TTF font data"). La original está en
+  `arte_original/ARCO_original.ttf`. La fuente es de puras mayúsculas.
+- Color del texto: `#552000` (`COLOR_TEXTO_MADERA` en `Tema.hpp`). Única
+  excepción: en Configuración lo que va directo sobre la madera oscura usa
+  `COLOR_TEXTO_CLARO`.
 
 ---
 
 ## Pruebas
 
-`Partida.cpp`, `Tablero.cpp`, `Dificultad.cpp` y `Aleatorio.cpp` **no incluyen
-raylib**, así que se pueden compilar y correr solos:
+`Partida.cpp`, `Tablero.cpp`, `Dificultad.cpp`, `Aleatorio.cpp` y
+`TablaPuntajes.cpp` **no incluyen raylib**, así que se pueden compilar y correr solos:
 
 ```
 g++ -std=c++11 -Wall -Wextra -o prueba prueba.cpp \
-    Partida.cpp Tablero.cpp Dificultad.cpp Aleatorio.cpp
+    Partida.cpp Tablero.cpp Dificultad.cpp Aleatorio.cpp ConfigPartida.cpp \n    TablaPuntajes.cpp
 ```
 
-Ya se validó así: pozos/vidas por nivel, recorte del nombre a 12 caracteres,
-"uno a la vez" en fácil/normal, simultáneos en difícil, +1 por topo, la curva de
-aceleración tocando el piso, escape sin perder vida, bomba (−2, −1 vida, racha
-a 0), puntaje que no va a negativos, fin de partida y proporción de bombas.
+Ya se validó así: pozos/vidas/tiempos por nivel, nombre por defecto, tope de 2
+objetos en los tres niveles, escalones de 0.2 s cada 10 apariciones hasta el
+piso, probabilidad del dorado (15/50/100 %, nunca 30 sin dorado, ~15 % en
+promedio), +1 topo y +1 dorado, bomba (−2, −1 vida, racha a 0), aplastado que
+ocupa el pozo 0.5 s y no se puede volver a golpear, 3 escapes no seguidos = −1
+vida (bombas que se esconden no cuentan), puntaje que no va a negativos y fin de
+partida. De la tabla de puntajes: orden por puntos, desempate por racha y luego
+por antigüedad, tope de 10 por nivel, guardar y leer el archivo (con nombres
+con espacios), archivo inexistente y renglones basura.
 **Si se tocan las reglas, conviene rehacer esa prueba.**
 
 ---
 
 ## Lo que sigue pendiente
 
-- `Puntaje.cpp` (mejores puntajes), `Creditos.cpp` y `Opciones.cpp` siguen como
-  pantallas de relleno con `dibujarPantallaPendiente()`. `Escena_opciones` ni
+- `Opciones.cpp` sigue como pantalla de relleno con `dibujarPantallaPendiente()`. `Escena_opciones` ni
   siquiera tiene entrada desde el menú.
-- No se guarda nada en disco: los puntajes se pierden al cerrar.
 - `Monticulo.hpp` está reservado a propósito y **vacío**. Se decidió no meter un
   montículo porque con 10 pozos revisarlos todos cada fotograma son 10
   comparaciones; el archivo tiene la explicación. Si el profe lo pide, ahí va.

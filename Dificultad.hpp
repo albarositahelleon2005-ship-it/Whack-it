@@ -21,6 +21,29 @@ const int MAX_POZOS = 10;
 /// En cuántas filas se acomodan los pozos, como máximo.
 const int MAX_FILAS = 3;
 
+//***********************************************
+// REGLAS QUE NO CAMBIAN CON EL NIVEL
+//***********************************************
+
+/// Cuánto se queda en el pozo la imagen del topo aplastado o de la explosión.
+const float DURACION_APLASTADO = 0.5f;
+
+/// Cuántos puntos da el topo dorado (el normal da 1). Estuvo en 3, pero el
+/// equipo prefirió que todo mapache atrapado valga 1, sea dorado o no. Se deja
+/// la constante por si se quiere volver a premiar al dorado.
+const int PUNTOS_PREMIUM = 1;
+
+// Probabilidad del topo dorado. No es fija: sube mientras más tiempo lleva sin
+// salir, para que ninguna partida se quede sin verlo. Se cuenta en objetos
+// (topos y bombas) desde el último dorado, y al salir uno la cuenta vuelve a 0.
+const int PORCENTAJE_PREMIUM        = 15;   ///< Probabilidad normal
+const int PORCENTAJE_PREMIUM_TARDE  = 50;   ///< Pasados PREMIUM_TARDE_DESPUES objetos sin dorado
+const int PREMIUM_TARDE_DESPUES     = 20;
+const int PREMIUM_SEGURO_EN         = 30;   ///< El objeto número 30 sin dorado es dorado sí o sí
+
+/// Cada cuántos topos escapados (en toda la partida, no seguidos) se pierde una vida.
+const int ESCAPES_POR_VIDA = 3;
+
 /**
  * \brief Nivel de dificultad de la partida.
  *
@@ -45,9 +68,9 @@ struct ReglasDificultad {
     int   vidas;                ///< Con cuántas vidas empieza el jugador
     float visibleInicial;       ///< Segundos que dura visible el primer objeto
     float visibleMinimo;        ///< Piso de ese tiempo; nunca baja de aquí
-    float pasoReduccion;        ///< Cuánto se recorta ese tiempo en cada aparición
-    float intervaloAparicion;   ///< Segundos entre una aparición y la siguiente
-    bool  unoALaVez;            ///< Verdadero si no puede haber dos objetos al mismo tiempo
+    float pasoReduccion;        ///< Cuánto se recorta ese tiempo cada \p aparicionesPorPaso
+    int   aparicionesPorPaso;   ///< Cada cuántas apariciones se recorta el tiempo visible
+    int   maxSimultaneos;       ///< Cuántos objetos puede haber en pantalla a la vez (aplastados incluidos)
     int   porcentajeBomba;      ///< De cada 100 apariciones, cuántas son bomba
     int   filas;                ///< En cuántas filas se acomodan los pozos
     const int* pozosPorFila;    ///< Cuántos pozos lleva cada fila (\p filas elementos)

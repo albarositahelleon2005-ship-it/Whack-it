@@ -29,6 +29,8 @@ bool ajustesAbiertos();
  * \brief Procesa la entrada de la ventana (una llamada por fotograma).
  *
  * Aplica los cambios de volumen y se cierra sola con el botón Cerrar o con ESC.
+ * Con el teclado: arriba/abajo eligen fila, izquierda/derecha bajan y suben
+ * el volumen, y Enter sobre Cerrar la cierra.
  */
 void ActualizarAjustes();
 
